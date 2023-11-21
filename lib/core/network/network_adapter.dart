@@ -17,21 +17,24 @@ class APINetworkAdapter implements NetworkAdapter {
   @override
   Future<AudetyeResponseModel> request(
       RequestType requestType, String endpint, Map<String, dynamic> queryParameters) async {
-    late AudetyeResponseModel response;
-    late List<dynamic>? data;
-    late Failure? failure;
-    late String? message;
-    late AudetyeResponseType responseType;
+    dynamic data;
+    Failure? failure;
+    String? message;
+    AudetyeResponseType responseType;
     try {
       final baseURL = "https://dev.minaini.com:2053/r/$endpint";
       late Response dioResponse;
+      final requestOptions = Options(headers: {
+        "Authorization":
+            "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzAwNjU1OTk5LCJpYXQiOjE3MDA1Njk1OTksImp0aSI6IjcxNDYwNjBkZjQ5NTRiYjJhNjVlNTcyOTMwYjAwZTAzIiwidXNlcl9pZCI6Mn0.CtTdoJX1F6OX7o9VDfj15SINye3duzPeZou9YZZWiZA"
+      });
 
       switch (requestType) {
         case RequestType.get:
-          dioResponse = await _dio.get(baseURL, queryParameters: queryParameters);
+          dioResponse = await _dio.get(baseURL, queryParameters: queryParameters, options: requestOptions);
           break;
         case RequestType.post:
-          dioResponse = await _dio.post(baseURL, data: queryParameters);
+          dioResponse = await _dio.post(baseURL, data: queryParameters, options: requestOptions);
           break;
       }
 
@@ -44,11 +47,10 @@ class APINetworkAdapter implements NetworkAdapter {
         failure = BusinessFailure(failureMessage: dioResponse.data['message']);
       }
     } catch (e) {
+      responseType = AudetyeResponseType.serverFailure;
       failure = ServerFailure();
     }
 
-    response = AudetyeResponseModel(data: data, failure: failure, responseType: responseType);
-
-    return response;
+    return AudetyeResponseModel(data: data, failure: failure, responseType: responseType, message: message);
   }
 }
